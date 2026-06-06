@@ -21,7 +21,7 @@ DEFAULT_VERSION = "3.3"
 DEFAULT_POLL_INTERVAL = 15
 DEFAULT_DISCOVERY_INTERVAL = 300
 
-PLATFORMS = ["switch", "light", "lock", "sensor", "climate", "cover"]
+PLATFORMS = ["switch", "light", "lock", "sensor", "climate", "cover", "text"]
 
 TUYA_BRIGHTNESS_MAX = 1000
 TUYA_BRIGHTNESS_MIN = 10
