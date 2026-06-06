@@ -3,11 +3,11 @@
     "step": {
       "user": {
         "title": "Omni Tuya Local",
-        "description": "Set optional Tuya Cloud credentials for sync. Devices can also be added later by service.",
+        "description": "Ingresa tus credenciales Tuya Cloud para sincronizar dispositivos automáticamente.",
         "data": {
-          "region": "Tuya region",
-          "api_key": "Tuya IoT access ID",
-          "api_secret": "Tuya IoT access secret"
+          "region": "Región Tuya (us / eu / cn / in)",
+          "api_key": "Tuya IoT Access ID",
+          "api_secret": "Tuya IoT Access Secret"
         }
       }
     }
@@ -15,38 +15,25 @@
   "options": {
     "step": {
       "init": {
-        "title": "Omni Tuya Local — Options",
-        "description": "{count} devices registered.",
+        "title": "Omni Tuya — Configurar dispositivo",
+        "description": "Selecciona el dispositivo al que deseas asignarle la IP local. Tienes {count} dispositivos registrados.",
         "data": {
-          "action": "What do you want to configure?"
+          "device_id": "Dispositivo"
         }
       },
-      "cloud_config": {
-        "title": "Cloud API Credentials",
+      "set_ip": {
+        "title": "IP de {device_name}",
+        "description": "Asigna la dirección IP local del dispositivo **{device_name}**.\n\nID: `{device_id}`\nIP actual: `{current_ip}`\n\nDejar en blanco para que el motor use autodescubrimiento.",
         "data": {
-          "region": "Tuya region (us / eu / cn / in)",
-          "api_key": "Tuya IoT access ID",
-          "api_secret": "Tuya IoT access secret"
-        }
-      },
-      "select_device": {
-        "title": "Select Device to Edit",
-        "data": {
-          "device_id": "Device"
-        }
-      },
-      "edit_device": {
-        "title": "Edit Device — {device_name}",
-        "description": "Device ID: {device_id}",
-        "data": {
-          "host": "IP Address (leave blank for auto-discovery)",
-          "local_key": "Local Key",
-          "version": "Protocol version (e.g. 3.3 or 3.4)"
+          "host": "Dirección IP local (ej. 192.168.1.x)"
         }
       }
     },
+    "error": {
+      "invalid_ip": "La dirección IP no tiene un formato válido (usa el formato 192.168.x.x)."
+    },
     "abort": {
-      "no_devices": "No devices registered. Add one first via the omni_tuya_local.add_device service."
+      "no_devices": "No hay dispositivos registrados. Agrega uno primero usando el servicio omni_tuya_local.add_device o sincronizando con Tuya Cloud."
     }
   }
 }
