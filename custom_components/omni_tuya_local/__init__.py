@@ -54,8 +54,8 @@ REMOVE_DEVICE_SCHEMA = vol.Schema({vol.Required(CONF_DEVICE_ID): cv.string})
 
 SYNC_CLOUD_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_API_SECRET): cv.string,
+        vol.Optional(CONF_API_KEY, default=""): cv.string,
+        vol.Optional(CONF_API_SECRET, default=""): cv.string,
         vol.Optional(CONF_REGION, default=DEFAULT_REGION): cv.string,
         vol.Optional(CONF_DEVICE_ID, default=""): cv.string,
     }
@@ -69,6 +69,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.data:
         store.cloud_config.update({k: v for k, v in entry.data.items() if v})
         await store.async_save()
+
+    if store.cloud_config.get(CONF_API_KEY) and store.cloud_config.get(CONF_API_SECRET) and not store.all():
+        try:
+            devices = await async_fetch_cloud_devices(
+                hass,
+                store.cloud_config[CONF_API_KEY],
+                store.cloud_config[CONF_API_SECRET],
+                store.cloud_config.get(CONF_REGION, DEFAULT_REGION),
+                store.cloud_config.get(CONF_DEVICE_ID, ""),
+            )
+            await store.add_many(devices)
+            _LOGGER.info("Imported %s Tuya devices during setup", len(devices))
+        except Exception as err:
+            _LOGGER.warning("Tuya cloud sync during setup failed: %s", err)
 
     coordinator = OmniTuyaLocalCoordinator(hass, entry, store)
     await coordinator.async_config_entry_first_refresh()
@@ -113,12 +127,18 @@ def _async_register_services(hass: HomeAssistant, entry_id: str) -> None:
 
     async def sync_cloud(call: ServiceCall) -> dict[str, Any]:
         coord = _coordinator(hass, entry_id)
+        cloud_config = dict(coord.store.cloud_config)
+        cloud_config.update({k: v for k, v in call.data.items() if v})
+        if not cloud_config.get(CONF_API_KEY) or not cloud_config.get(CONF_API_SECRET):
+            raise ValueError("Tuya API key and API secret are required")
+        coord.store.cloud_config.update(cloud_config)
+        await coord.store.async_save()
         devices = await async_fetch_cloud_devices(
             hass,
-            call.data[CONF_API_KEY],
-            call.data[CONF_API_SECRET],
-            call.data.get(CONF_REGION, DEFAULT_REGION),
-            call.data.get(CONF_DEVICE_ID, ""),
+            cloud_config[CONF_API_KEY],
+            cloud_config[CONF_API_SECRET],
+            cloud_config.get(CONF_REGION, DEFAULT_REGION),
+            cloud_config.get(CONF_DEVICE_ID, ""),
         )
         imported = await coord.async_add_devices(devices)
         return {"imported": imported}
