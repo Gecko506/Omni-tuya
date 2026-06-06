@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from homeassistant.components.light import ColorMode, LightEntity
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_BRIGHTNESS
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
