@@ -171,17 +171,13 @@ class OmniTuyaLocalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             protocol = config.get(CONF_VERSION, DEFAULT_VERSION)
             if protocol == "auto":
                 ok, detected = await _async_test_any_protocol(self.hass, config)
-                if ok:
-                    config[CONF_VERSION] = detected
+                config[CONF_VERSION] = detected if ok else DEFAULT_VERSION
             else:
-                ok = await _async_test_tuya_connection(self.hass, config, protocol)
-            if ok:
-                await self.async_set_unique_id(config[CONF_DEVICE_ID])
-                self._abort_if_unique_id_configured()
-                self._device_data = config
-                return await self.async_step_device_details()
-            errors["base"] = "connection"
-            defaults.update(config)
+                await _async_test_tuya_connection(self.hass, config, protocol)
+            await self.async_set_unique_id(config[CONF_DEVICE_ID])
+            self._abort_if_unique_id_configured()
+            self._device_data = config
+            return await self.async_step_device_details()
 
         schema = vol.Schema(
             {
@@ -214,7 +210,7 @@ class OmniTuyaLocalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=schema,
             errors=errors,
             description_placeholders={
-                "hint": "Cierra la app Smart Life/Tuya mientras pruebas conexión; muchos dispositivos solo aceptan una conexión local.",
+                "hint": "La API ya trajo la ficha del dispositivo. Ingresa la IP local; Omni guardara el dispositivo aunque la prueba LAN inmediata no responda.",
             },
         )
 

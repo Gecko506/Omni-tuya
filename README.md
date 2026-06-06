@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/versión-0.2.0-blue?style=flat-square"/>
+  <img src="https://img.shields.io/badge/versión-0.2.1-blue?style=flat-square"/>
   <img src="https://img.shields.io/badge/HA-2026.4%2B-41BDF5?style=flat-square&logo=home-assistant"/>
   <img src="https://img.shields.io/badge/HACS-Custom-orange?style=flat-square"/>
   <img src="https://img.shields.io/badge/protocolo-Tuya%20Local-FF6B35?style=flat-square"/>
@@ -376,6 +376,7 @@ Los campos son compatibles: `device_id`, `name`, `local_key`, `ip` → `host`, `
 
 | Versión | Cambios |
 |---|---|
+| **0.2.1** | El alta por dispositivo ya no se bloquea si la prueba LAN inmediata falla; la API importa metadata y la IP se guarda para que el coordinator controle localmente |
 | **0.2.0** | Flujo por dispositivo, sin hub legado visible, más plataformas (`fan`, `binary_sensor`, `button`, `number`, `vacuum`, `alarm_control_panel`, `humidifier`) y tipos reales como cafetera, cocina, robot aspirador, kit de alarma, sensores y electrodomésticos |
 | **0.1.9** | La entidad editable `Dirección IP` ahora es visible como control normal del dispositivo |
 | **0.1.8** | Servicio `set_device_ip`, versión/tag/release para HACS y documentación de configuración local |

@@ -52,7 +52,7 @@
     "error": {
       "cloud_error": "No se pudo consultar Tuya Cloud. Revisa credenciales, region y permisos del proyecto.",
       "no_devices": "No se encontraron dispositivos con local key.",
-      "connection": "No se pudo conectar localmente. Revisa IP, local key y version; cierra la app Tuya/Smart Life mientras pruebas."
+      "connection": "No se pudo conectar localmente, pero el dispositivo puede guardarse y reintentarse desde el coordinator."
     }
   },
   "options": {
