@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/versión-0.1.8-blue?style=flat-square"/>
+  <img src="https://img.shields.io/badge/versión-0.1.9-blue?style=flat-square"/>
   <img src="https://img.shields.io/badge/HA-2026.4%2B-41BDF5?style=flat-square&logo=home-assistant"/>
   <img src="https://img.shields.io/badge/HACS-Custom-orange?style=flat-square"/>
   <img src="https://img.shields.io/badge/protocolo-Tuya%20Local-FF6B35?style=flat-square"/>
@@ -221,8 +221,8 @@ service: omni_tuya_local.diagnostics
 
 ```json
 {
-  "version": "0.1.8",
-  "build": "20260605.8",
+  "version": "0.1.9",
+  "build": "20260606.1",
   "devices": 12
 }
 ```
@@ -342,6 +342,7 @@ Los campos son compatibles: `device_id`, `name`, `local_key`, `ip` → `host`, `
 
 | Versión | Cambios |
 |---|---|
+| **0.1.9** | La entidad editable `Dirección IP` ahora es visible como control normal del dispositivo |
 | **0.1.8** | Servicio `set_device_ip`, versión/tag/release para HACS y documentación de configuración local |
 | **0.1.7** | Entidad `text` editable para IP desde la página del dispositivo |
 | **0.1.6** | OptionsFlow para editar IP por dispositivo, logo PNG real, traducciones |

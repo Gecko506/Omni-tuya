@@ -47,11 +47,8 @@ class TuyaIpTextEntity(TextEntity):
         self.device_id = device_id
         
         # Entity attributes
-        self._attr_unique_id = f"{device_id}_ip_address"
+        self._attr_unique_id = f"{DOMAIN}_{device_id}_ip_address"
         self._attr_name = "Dirección IP"
-        
-        # We use diagnostic entity category so it doesn't clutter the main dashboard but shows up in the device page
-        self._attr_entity_category = "config"
 
         device_name = config.get("name") or device_id
         self._attr_device_info = DeviceInfo(
