@@ -1,0 +1,15 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Omni Tuya Local",
+        "description": "Set optional Tuya Cloud credentials for sync. Devices can also be added later by service.",
+        "data": {
+          "region": "Tuya region",
+          "api_key": "Tuya IoT access ID",
+          "api_secret": "Tuya IoT access secret"
+        }
+      }
+    }
+  }
+}

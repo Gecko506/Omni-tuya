@@ -1,0 +1,137 @@
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+import voluptuous as vol
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
+from homeassistant.helpers import config_validation as cv
+
+from .cloud import async_fetch_cloud_devices
+from .const import (
+    CONF_API_KEY,
+    CONF_API_SECRET,
+    CONF_DEVICE_ID,
+    CONF_HOST,
+    CONF_LOCAL_KEY,
+    CONF_REGION,
+    CONF_VERSION,
+    DEFAULT_REGION,
+    DEFAULT_VERSION,
+    DOMAIN,
+    PLATFORMS,
+    SERVICE_ADD_DEVICE,
+    SERVICE_RELOAD_DEVICES,
+    SERVICE_REMOVE_DEVICE,
+    SERVICE_SCAN_NETWORK,
+    SERVICE_SYNC_CLOUD,
+)
+from .coordinator import OmniTuyaLocalCoordinator
+from .discovery import async_scan_network
+from .storage import TuyaDeviceStore
+
+_LOGGER = logging.getLogger(__name__)
+
+ADD_DEVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE_ID): cv.string,
+        vol.Required("name"): cv.string,
+        vol.Required(CONF_LOCAL_KEY): cv.string,
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): cv.string,
+        vol.Optional("domain", default="switch"): vol.In(["switch", "light", "lock", "sensor", "climate", "cover"]),
+        vol.Optional("product_name", default=""): cv.string,
+        vol.Optional("dps_map", default={}): dict,
+    }
+)
+
+REMOVE_DEVICE_SCHEMA = vol.Schema({vol.Required(CONF_DEVICE_ID): cv.string})
+
+SYNC_CLOUD_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_API_SECRET): cv.string,
+        vol.Optional(CONF_REGION, default=DEFAULT_REGION): cv.string,
+        vol.Optional(CONF_DEVICE_ID, default=""): cv.string,
+    }
+)
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    store = TuyaDeviceStore(hass)
+    await store.async_load()
+
+    if entry.data:
+        store.cloud_config.update({k: v for k, v in entry.data.items() if v})
+        await store.async_save()
+
+    coordinator = OmniTuyaLocalCoordinator(hass, entry, store)
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    _async_register_services(hass, entry.entry_id)
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        coordinator: OmniTuyaLocalCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        await coordinator.async_shutdown()
+    return unload_ok
+
+
+def _coordinator(hass: HomeAssistant, entry_id: str) -> OmniTuyaLocalCoordinator:
+    return hass.data[DOMAIN][entry_id]
+
+
+def _async_register_services(hass: HomeAssistant, entry_id: str) -> None:
+    if hass.services.has_service(DOMAIN, SERVICE_ADD_DEVICE):
+        return
+
+    async def add_device(call: ServiceCall) -> None:
+        coord = _coordinator(hass, entry_id)
+        await coord.async_add_device(dict(call.data))
+
+    async def remove_device(call: ServiceCall) -> None:
+        coord = _coordinator(hass, entry_id)
+        await coord.async_remove_device(call.data[CONF_DEVICE_ID])
+
+    async def scan_network(call: ServiceCall) -> dict[str, Any]:
+        coord = _coordinator(hass, entry_id)
+        found = await async_scan_network(hass, list(coord.store.all().values()))
+        for device in found:
+            if device.get("synced") and device.get(CONF_LOCAL_KEY):
+                await coord.async_add_device(device)
+        return {"found": found}
+
+    async def sync_cloud(call: ServiceCall) -> dict[str, Any]:
+        coord = _coordinator(hass, entry_id)
+        devices = await async_fetch_cloud_devices(
+            hass,
+            call.data[CONF_API_KEY],
+            call.data[CONF_API_SECRET],
+            call.data.get(CONF_REGION, DEFAULT_REGION),
+            call.data.get(CONF_DEVICE_ID, ""),
+        )
+        imported = await coord.async_add_devices(devices)
+        return {"imported": imported}
+
+    async def reload_devices(call: ServiceCall) -> None:
+        coord = _coordinator(hass, entry_id)
+        await coord.async_reload_devices()
+
+    hass.services.async_register(DOMAIN, SERVICE_ADD_DEVICE, add_device, schema=ADD_DEVICE_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_REMOVE_DEVICE, remove_device, schema=REMOVE_DEVICE_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_SCAN_NETWORK, scan_network)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SYNC_CLOUD,
+        sync_cloud,
+        schema=SYNC_CLOUD_SCHEMA,
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+    hass.services.async_register(DOMAIN, SERVICE_RELOAD_DEVICES, reload_devices)

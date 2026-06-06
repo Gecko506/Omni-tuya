@@ -1,0 +1,85 @@
+add_device:
+  name: Add device
+  description: Add or update a Tuya local device.
+  fields:
+    device_id:
+      required: true
+      selector:
+        text:
+    name:
+      required: true
+      selector:
+        text:
+    local_key:
+      required: true
+      selector:
+        text:
+          type: password
+    host:
+      required: true
+      selector:
+        text:
+    version:
+      default: "3.3"
+      selector:
+        select:
+          options:
+            - "3.1"
+            - "3.3"
+            - "3.4"
+            - "3.5"
+    domain:
+      default: switch
+      selector:
+        select:
+          options:
+            - switch
+            - light
+            - lock
+            - sensor
+            - climate
+            - cover
+
+remove_device:
+  name: Remove device
+  description: Remove a Tuya local device.
+  fields:
+    device_id:
+      required: true
+      selector:
+        text:
+
+scan_network:
+  name: Scan network
+  description: Discover local Tuya devices and update known IP addresses.
+
+sync_cloud:
+  name: Sync cloud
+  description: Import device IDs and local keys from Tuya IoT Cloud.
+  fields:
+    api_key:
+      required: true
+      selector:
+        text:
+    api_secret:
+      required: true
+      selector:
+        text:
+          type: password
+    region:
+      default: us
+      selector:
+        select:
+          options:
+            - us
+            - eu
+            - cn
+            - in
+    device_id:
+      required: false
+      selector:
+        text:
+
+reload_devices:
+  name: Reload devices
+  description: Reload stored devices and refresh entities.

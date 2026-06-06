@@ -1,0 +1,11 @@
+{
+  "domain": "omni_tuya_local",
+  "name": "Omni Tuya Local",
+  "codeowners": ["@Gecko506"],
+  "config_flow": true,
+  "documentation": "https://github.com/Gecko506/omni-tuya-local",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "requirements": ["tinytuya>=1.15.1"],
+  "version": "0.1.0"
+}
