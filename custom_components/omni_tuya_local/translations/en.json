@@ -11,5 +11,42 @@
         }
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Omni Tuya Local — Options",
+        "description": "{count} devices registered.",
+        "data": {
+          "action": "What do you want to configure?"
+        }
+      },
+      "cloud_config": {
+        "title": "Cloud API Credentials",
+        "data": {
+          "region": "Tuya region (us / eu / cn / in)",
+          "api_key": "Tuya IoT access ID",
+          "api_secret": "Tuya IoT access secret"
+        }
+      },
+      "select_device": {
+        "title": "Select Device to Edit",
+        "data": {
+          "device_id": "Device"
+        }
+      },
+      "edit_device": {
+        "title": "Edit Device — {device_name}",
+        "description": "Device ID: {device_id}",
+        "data": {
+          "host": "IP Address (leave blank for auto-discovery)",
+          "local_key": "Local Key",
+          "version": "Protocol version (e.g. 3.3 or 3.4)"
+        }
+      }
+    },
+    "abort": {
+      "no_devices": "No devices registered. Add one first via the omni_tuya_local.add_device service."
+    }
   }
 }
