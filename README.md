@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/versión-0.1.9-blue?style=flat-square"/>
+  <img src="https://img.shields.io/badge/versión-0.2.0-blue?style=flat-square"/>
   <img src="https://img.shields.io/badge/HA-2026.4%2B-41BDF5?style=flat-square&logo=home-assistant"/>
   <img src="https://img.shields.io/badge/HACS-Custom-orange?style=flat-square"/>
   <img src="https://img.shields.io/badge/protocolo-Tuya%20Local-FF6B35?style=flat-square"/>
@@ -21,7 +21,7 @@
 
 **Omni Tuya Local** es una integración nativa de Home Assistant que controla tus dispositivos Tuya **directamente en tu red local**, usando el protocolo propietario de Tuya (vía `tinytuya`).
 
-La nube de Tuya se usa **únicamente** para importar los metadatos del dispositivo (ID, local key, nombre). El control en tiempo real es 100% local.
+La nube de Tuya se usa **únicamente** para importar la ficha completa del dispositivo: ID, local key, nombre, producto, categoría, tipo sugerido y metadatos. El control en tiempo real es 100% local.
 
 ```
 App / HA  ──────►  Omni Tuya Local  ──────►  Dispositivo Tuya
@@ -40,10 +40,17 @@ App / HA  ──────►  Omni Tuya Local  ──────►  Disposi
 |---|---|---|
 | `switch` | `switch.nombre` | Enchufes, interruptores, relés |
 | `light` | `light.nombre` | Focos, tiras LED, lámparas |
-| `lock` | `lock.nombre` | Cerraduras inteligentes |
-| `sensor` | `sensor.nombre` | Temperatura, humedad, energía |
-| `climate` | `climate.nombre` | Termostatos, aires acondicionados |
 | `cover` | `cover.nombre` | Persianas, cortinas motorizadas |
+| `climate` | `climate.nombre` | Termostatos, aires acondicionados |
+| `sensor` | `sensor.nombre` | Temperatura, humedad, energía |
+| `binary_sensor` | `binary_sensor.nombre` | Movimiento, puerta, presencia |
+| `button` | `button.nombre` | Pulsadores y acciones momentáneas |
+| `number` | `number.nombre` | Valores numéricos editables |
+| `vacuum` | `vacuum.nombre` | Robot aspirador / aspiradora |
+| `alarm_control_panel` | `alarm_control_panel.nombre` | Kit o panel de alarma |
+| `humidifier` | `humidifier.nombre` | Humidificadores y equipos similares |
+
+Además de la plataforma técnica, cada dispositivo puede tener un **tipo real** para icono y semántica: cafetera, cocina, microondas, robot aspirador, kit de alarma, sirena, purificador, comedero de mascotas, riego, válvula, bomba, sensores, cerradura, cortina, persiana, regleta, tomacorriente y más.
 
 ---
 
@@ -72,7 +79,7 @@ App / HA  ──────►  Omni Tuya Local  ──────►  Disposi
 Configuración → Dispositivos y Servicios → + Agregar integración → Omni Tuya Local
 ```
 
-En el formulario inicial puedes ingresar tus credenciales de Tuya Cloud (opcional pero recomendado para importar dispositivos automáticamente):
+En el formulario inicial puedes usar Tuya Cloud para elegir un dispositivo. Omni importa sus datos técnicos y normalmente solo tendrás que ingresar o confirmar la **IP local**:
 
 | Campo | Descripción |
 |---|---|
@@ -80,7 +87,7 @@ En el formulario inicial puedes ingresar tus credenciales de Tuya Cloud (opciona
 | **Access ID** | API Key de tu proyecto en [Tuya IoT Platform](https://iot.tuya.com/) |
 | **Access Secret** | API Secret del mismo proyecto |
 
-> Si dejas los campos vacíos, podrás agregar dispositivos manualmente después.
+> El API no controla el dispositivo. Solo extrae información. El control se hace localmente por LAN usando la IP y la local key importada.
 
 ---
 
@@ -93,6 +100,7 @@ Los dispositivos importados desde la nube no siempre tienen una IP estática asi
 3. Haz clic en **⚙️ Configurar**
 4. Selecciona el dispositivo de la lista (muestra el nombre y la IP actual)
 5. Ingresa la nueva dirección IP local (ej. `192.168.1.100`)
+6. Elige **Exportar como entidad** y **Tipo real del dispositivo**
 6. Guarda — el motor recarga el dispositivo de inmediato
 
 > 💡 La `local_key` NO necesitas ingresarla manualmente; se importa automáticamente desde el API de Tuya Cloud.
@@ -142,7 +150,8 @@ data:
   local_key: "abc123xyz456"
   host: "192.168.1.105"
   version: "3.3"
-  domain: "switch"           # switch | light | lock | sensor | climate | cover
+  domain: "switch"           # switch | light | fan | lock | cover | climate | sensor | binary_sensor | button | number | vacuum | alarm_control_panel | humidifier
+  device_type: "coffee_maker" # opcional: cafetera, robot_vacuum, alarm_kit, kitchen, etc.
   product_name: "Smart Plug" # opcional
   dps_map: {}                # opcional — mapeo DPS personalizado
 ```
@@ -168,6 +177,30 @@ service: omni_tuya_local.set_device_ip
 data:
   device_id: "bf1234567890abcdef"
   host: "192.168.1.105"
+```
+
+---
+
+### `omni_tuya_local.set_device_domain`
+Cambia la plataforma donde Home Assistant expone un dispositivo.
+
+```yaml
+service: omni_tuya_local.set_device_domain
+data:
+  device_id: "bf1234567890abcdef"
+  domain: "fan"
+```
+
+---
+
+### `omni_tuya_local.set_device_type`
+Cambia el tipo real usado para icono, modelo y semántica sin cambiar necesariamente la plataforma.
+
+```yaml
+service: omni_tuya_local.set_device_type
+data:
+  device_id: "bf1234567890abcdef"
+  device_type: "coffee_maker"
 ```
 
 ---
@@ -221,8 +254,8 @@ service: omni_tuya_local.diagnostics
 
 ```json
 {
-  "version": "0.1.9",
-  "build": "20260606.1",
+  "version": "0.2.0",
+  "build": "20260606.2",
   "devices": 12
 }
 ```
@@ -305,6 +338,7 @@ Estructura del registro por dispositivo:
   "version": "3.3",
   "domain": "switch",
   "product_name": "Smart Plug",
+  "device_type": "outlet",
   "area_id": null,
   "enabled": true,
   "poll_interval": 15,
@@ -322,7 +356,7 @@ Estructura del registro por dispositivo:
 
 Si usabas dispositivos Tuya en OmniCore (con el motor `omni-tuya.py`), puedes migrarlos usando el servicio `add_device` con los datos de cada dispositivo de tu base de datos `tuya.sqlite`.
 
-Los campos son compatibles: `device_id`, `name`, `local_key`, `ip` → `host`, `version`, `domain`.
+Los campos son compatibles: `device_id`, `name`, `local_key`, `ip` → `host`, `version`, `domain` y `device_type`.
 
 ---
 
@@ -342,6 +376,7 @@ Los campos son compatibles: `device_id`, `name`, `local_key`, `ip` → `host`, `
 
 | Versión | Cambios |
 |---|---|
+| **0.2.0** | Flujo por dispositivo, sin hub legado visible, más plataformas (`fan`, `binary_sensor`, `button`, `number`, `vacuum`, `alarm_control_panel`, `humidifier`) y tipos reales como cafetera, cocina, robot aspirador, kit de alarma, sensores y electrodomésticos |
 | **0.1.9** | La entidad editable `Dirección IP` ahora es visible como control normal del dispositivo |
 | **0.1.8** | Servicio `set_device_ip`, versión/tag/release para HACS y documentación de configuración local |
 | **0.1.7** | Entidad `text` editable para IP desde la página del dispositivo |

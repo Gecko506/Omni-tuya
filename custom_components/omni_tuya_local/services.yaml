@@ -35,10 +35,67 @@ add_device:
           options:
             - switch
             - light
+            - fan
             - lock
-            - sensor
-            - climate
             - cover
+            - climate
+            - sensor
+            - binary_sensor
+            - button
+            - number
+            - vacuum
+            - alarm_control_panel
+            - humidifier
+    device_type:
+      default: generic
+      selector:
+        select:
+          options:
+            - generic
+            - kitchen
+            - coffee_maker
+            - kettle
+            - rice_cooker
+            - air_fryer
+            - microwave
+            - oven
+            - refrigerator
+            - washer
+            - dryer
+            - dishwasher
+            - fan
+            - air_conditioner
+            - heater
+            - humidifier
+            - dehumidifier
+            - air_purifier
+            - robot_vacuum
+            - vacuum
+            - alarm_kit
+            - siren
+            - motion_sensor
+            - door_sensor
+            - smoke_sensor
+            - water_leak_sensor
+            - temperature_sensor
+            - humidity_sensor
+            - presence_sensor
+            - lock
+            - garage_door
+            - curtain
+            - blind
+            - light
+            - dimmer
+            - led_strip
+            - outlet
+            - power_strip
+            - switch
+            - ir_remote
+            - pet_feeder
+            - water_fountain
+            - sprinkler
+            - valve
+            - pump
 
 remove_device:
   name: Remove device
@@ -61,6 +118,92 @@ set_device_ip:
       required: true
       selector:
         text:
+
+set_device_domain:
+  name: Export device as
+  description: Change how an imported Tuya device is exposed in Home Assistant.
+  fields:
+    device_id:
+      required: true
+      selector:
+        text:
+    domain:
+      required: true
+      selector:
+        select:
+          options:
+            - switch
+            - light
+            - fan
+            - lock
+            - cover
+            - climate
+            - sensor
+            - binary_sensor
+            - button
+            - number
+            - vacuum
+            - alarm_control_panel
+            - humidifier
+
+set_device_type:
+  name: Set device type
+  description: Change the real-world device type used for icon, model and semantic labeling.
+  fields:
+    device_id:
+      required: true
+      selector:
+        text:
+    device_type:
+      required: true
+      selector:
+        select:
+          options:
+            - generic
+            - kitchen
+            - coffee_maker
+            - kettle
+            - rice_cooker
+            - air_fryer
+            - microwave
+            - oven
+            - refrigerator
+            - washer
+            - dryer
+            - dishwasher
+            - fan
+            - air_conditioner
+            - heater
+            - humidifier
+            - dehumidifier
+            - air_purifier
+            - robot_vacuum
+            - vacuum
+            - alarm_kit
+            - siren
+            - motion_sensor
+            - door_sensor
+            - smoke_sensor
+            - water_leak_sensor
+            - temperature_sensor
+            - humidity_sensor
+            - presence_sensor
+            - lock
+            - garage_door
+            - curtain
+            - blind
+            - light
+            - dimmer
+            - led_strip
+            - outlet
+            - power_strip
+            - switch
+            - ir_remote
+            - pet_feeder
+            - water_fountain
+            - sprinkler
+            - valve
+            - pump
 
 scan_network:
   name: Scan network

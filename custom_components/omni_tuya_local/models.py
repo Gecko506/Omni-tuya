@@ -24,6 +24,7 @@ class TuyaDeviceConfig:
     version: str = "3.3"
     domain: str = "switch"
     product_name: str = ""
+    device_type: str = "generic"
     area_id: str | None = None
     enabled: bool = True
     poll_interval: int = 15
@@ -44,6 +45,7 @@ class TuyaDeviceConfig:
             version=str(data.get("version") or data.get("ver") or "3.3"),
             domain=str(data.get("domain") or guess_domain(data)),
             product_name=str(data.get("product_name") or ""),
+            device_type=str(data.get("device_type") or guess_device_type(data)),
             area_id=data.get("area_id"),
             enabled=bool(data.get("enabled", True)),
             poll_interval=int(data.get("poll_interval") or 15),
@@ -65,6 +67,7 @@ class TuyaDeviceConfig:
             "version": self.version,
             "domain": self.domain,
             "product_name": self.product_name,
+            "device_type": self.device_type,
             "area_id": self.area_id,
             "enabled": self.enabled,
             "poll_interval": self.poll_interval,
@@ -92,6 +95,32 @@ def guess_domain(data: dict[str, Any]) -> str:
     if any(word in name or word in product for word in ("sensor", "temperature", "humidity", "temp", "humedad")):
         return "sensor"
     return "switch"
+
+
+def guess_device_type(data: dict[str, Any]) -> str:
+    name = str(data.get("name") or "").lower()
+    product = str(data.get("product_name") or "").lower()
+    text = f"{name} {product}"
+    matches = {
+        "coffee_maker": ("cafetera", "coffee"),
+        "robot_vacuum": ("robot", "vacuum", "aspirador"),
+        "alarm_kit": ("alarm", "alarma", "security kit"),
+        "air_conditioner": ("aire", "air conditioner", "ac "),
+        "fan": ("fan", "ventilador"),
+        "lock": ("lock", "cerradura"),
+        "curtain": ("curtain", "cortina"),
+        "light": ("light", "lamp", "luz", "bombillo"),
+        "outlet": ("plug", "outlet", "socket", "tomacorriente"),
+        "switch": ("switch", "interruptor", "apagador"),
+        "motion_sensor": ("motion", "movimiento"),
+        "door_sensor": ("door", "window", "puerta", "ventana"),
+        "temperature_sensor": ("temperature", "temperatura", "temp"),
+        "humidity_sensor": ("humidity", "humedad"),
+    }
+    for device_type, words in matches.items():
+        if any(word in text for word in words):
+            return device_type
+    return "generic"
 
 
 def normalize_device(data: dict[str, Any]) -> dict[str, Any]:

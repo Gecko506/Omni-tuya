@@ -3,7 +3,7 @@ from __future__ import annotations
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DEVICE_TYPES, DOMAIN
 from .coordinator import OmniTuyaLocalCoordinator
 
 
@@ -21,7 +21,10 @@ class OmniTuyaEntity(CoordinatorEntity[OmniTuyaLocalCoordinator]):
             identifiers={(DOMAIN, self.device_id)},
             name=config.get("name") or self.device_id,
             manufacturer="Tuya",
-            model=config.get("product_name") or config.get("domain") or "Tuya Local",
+            model=config.get("product_name")
+            or DEVICE_TYPES.get(config.get("device_type") or "generic", {}).get("label")
+            or config.get("domain")
+            or "Tuya Local",
         )
 
     @property
@@ -42,5 +45,10 @@ class OmniTuyaEntity(CoordinatorEntity[OmniTuyaLocalCoordinator]):
             "host": self.config.get("host"),
             "version": self.config.get("version"),
             "product_name": self.config.get("product_name"),
+            "device_type": self.config.get("device_type"),
             "raw_dps": self.raw_dps,
         }
+
+    @property
+    def icon(self) -> str | None:
+        return DEVICE_TYPES.get(self.config.get("device_type") or "generic", {}).get("icon")

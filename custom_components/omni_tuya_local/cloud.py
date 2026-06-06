@@ -5,7 +5,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from .models import guess_domain
+from .models import guess_device_type, guess_domain
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +49,11 @@ async def async_fetch_cloud_devices(
             "name": raw.get("name") or raw.get("id"),
             "version": str(raw.get("ver") or 3.3),
             "domain": guess_domain(raw),
+            "device_type": guess_device_type(raw),
             "product_name": raw.get("product_name") or "",
+            "category": raw.get("category") or "",
+            "category_name": raw.get("category_name") or "",
+            "product_id": raw.get("product_id") or "",
             "online": raw.get("online"),
             "gateway_id": raw.get("gateway_id") or "",
             "node_id": raw.get("node_id") or "",

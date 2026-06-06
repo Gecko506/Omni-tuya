@@ -3,13 +3,56 @@
     "step": {
       "user": {
         "title": "Omni Tuya Local",
-        "description": "Ingresa tus credenciales Tuya Cloud para sincronizar dispositivos automáticamente.",
+        "description": "Agrega dispositivos Tuya uno por uno. La nube se usa solo para obtener ID y local key; el control es local por LAN.",
         "data": {
-          "region": "Región Tuya (us / eu / cn / in)",
+          "setup_mode": "Metodo de agregado"
+        }
+      },
+      "cloud_credentials": {
+        "title": "Credenciales Tuya IoT",
+        "description": "Usa Access ID, Access Secret y region de Tuya IoT. Omni solo los usa para listar dispositivos y traer local keys.",
+        "data": {
+          "region": "Region Tuya",
           "api_key": "Tuya IoT Access ID",
           "api_secret": "Tuya IoT Access Secret"
         }
+      },
+      "choose_cloud_device": {
+        "title": "Elegir dispositivo",
+        "description": "Selecciona el dispositivo que vas a agregar a Home Assistant.",
+        "data": {
+          "device_id": "Dispositivo"
+        }
+      },
+      "search_device": {
+        "title": "Buscar IP local",
+        "description": "Omni intentara encontrar la IP local de {device_name}. Pulsa Enviar para buscar en la red.",
+        "data": {}
+      },
+      "local_device": {
+        "title": "Conexion local y exportacion",
+        "description": "{hint}",
+        "data": {
+          "device_id": "ID del dispositivo",
+          "host": "IP local",
+          "local_key": "Local key",
+          "version": "Version protocolo",
+          "domain": "Exportar como entidad",
+          "device_type": "Tipo real del dispositivo"
+        }
+      },
+      "device_details": {
+        "title": "Nombre del dispositivo",
+        "description": "Este nombre aparecera en Home Assistant.",
+        "data": {
+          "name": "Nombre"
+        }
       }
+    },
+    "error": {
+      "cloud_error": "No se pudo consultar Tuya Cloud. Revisa credenciales, region y permisos del proyecto.",
+      "no_devices": "No se encontraron dispositivos con local key.",
+      "connection": "No se pudo conectar localmente. Revisa IP, local key y version; cierra la app Tuya/Smart Life mientras pruebas."
     }
   },
   "options": {
@@ -22,10 +65,12 @@
         }
       },
       "set_ip": {
-        "title": "IP de {device_name}",
-        "description": "Asigna la dirección IP local del dispositivo **{device_name}**.\n\nID: `{device_id}`\nIP actual: `{current_ip}`\n\nDejar en blanco para que el motor use autodescubrimiento.",
+        "title": "Configurar {device_name}",
+        "description": "Ajusta la IP local y como debe verse este dispositivo en Home Assistant.\n\nID: `{device_id}`\nIP actual: `{current_ip}`\nEntidad actual: `{current_domain}`\nTipo actual: `{current_device_type}`\n\nEjemplo: una cafetera normalmente se exporta como `switch` y tipo real `Cafetera`; un robot aspirador puede exportarse como `vacuum` y tipo real `Robot aspirador`.",
         "data": {
-          "host": "Dirección IP local (ej. 192.168.1.x)"
+          "host": "Direccion IP local",
+          "domain": "Exportar como entidad",
+          "device_type": "Tipo real del dispositivo"
         }
       }
     },

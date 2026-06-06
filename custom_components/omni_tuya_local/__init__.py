@@ -14,6 +14,7 @@ from .const import (
     CONF_API_KEY,
     CONF_API_SECRET,
     CONF_DEVICE_ID,
+    CONF_DEVICE_TYPE,
     CONF_HOST,
     CONF_LOCAL_KEY,
     CONF_REGION,
@@ -21,13 +22,17 @@ from .const import (
     BUILD_NUMBER,
     DEFAULT_REGION,
     DEFAULT_VERSION,
+    DEVICE_TYPES,
     DOMAIN,
+    EXPORT_DOMAINS,
     INTEGRATION_VERSION,
     PLATFORMS,
     SERVICE_ADD_DEVICE,
     SERVICE_RELOAD_DEVICES,
     SERVICE_REMOVE_DEVICE,
     SERVICE_SCAN_NETWORK,
+    SERVICE_SET_DEVICE_DOMAIN,
+    SERVICE_SET_DEVICE_TYPE,
     SERVICE_SET_DEVICE_IP,
     SERVICE_SYNC_CLOUD,
     SERVICE_DIAGNOSTICS,
@@ -45,7 +50,8 @@ ADD_DEVICE_SCHEMA = vol.Schema(
         vol.Required(CONF_LOCAL_KEY): cv.string,
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): cv.string,
-        vol.Optional("domain", default="switch"): vol.In(["switch", "light", "lock", "sensor", "climate", "cover"]),
+        vol.Optional("domain", default="switch"): vol.In(EXPORT_DOMAINS),
+        vol.Optional(CONF_DEVICE_TYPE, default="generic"): vol.In(list(DEVICE_TYPES)),
         vol.Optional("product_name", default=""): cv.string,
         vol.Optional("dps_map", default={}): dict,
     }
@@ -57,6 +63,20 @@ SET_DEVICE_IP_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DEVICE_ID): cv.string,
         vol.Required(CONF_HOST): cv.string,
+    }
+)
+
+SET_DEVICE_DOMAIN_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE_ID): cv.string,
+        vol.Required("domain"): vol.In(EXPORT_DOMAINS),
+    }
+)
+
+SET_DEVICE_TYPE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE_ID): cv.string,
+        vol.Required(CONF_DEVICE_TYPE): vol.In(list(DEVICE_TYPES)),
     }
 )
 
@@ -73,8 +93,12 @@ SYNC_CLOUD_SCHEMA = vol.Schema(
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     store = TuyaDeviceStore(hass)
     await store.async_load()
+    active_store = store
 
-    if entry.data:
+    if entry.data and entry.data.get(CONF_DEVICE_ID) and entry.data.get(CONF_LOCAL_KEY):
+        await store.add(dict(entry.data))
+        active_store = _ScopedTuyaDeviceStore(store, entry.data[CONF_DEVICE_ID])
+    elif entry.data:
         store.cloud_config.update({k: v for k, v in entry.data.items() if v})
         await store.async_save()
 
@@ -92,7 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except Exception as err:
             _LOGGER.warning("Tuya cloud sync during setup failed: %s", err)
 
-    coordinator = OmniTuyaLocalCoordinator(hass, entry, store)
+    coordinator = OmniTuyaLocalCoordinator(hass, entry, active_store)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
@@ -111,6 +135,43 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 def _coordinator(hass: HomeAssistant, entry_id: str) -> OmniTuyaLocalCoordinator:
     return hass.data[DOMAIN][entry_id]
+
+
+class _ScopedTuyaDeviceStore:
+    """Expose a single stored Tuya device to a per-device config entry."""
+
+    def __init__(self, store: TuyaDeviceStore, device_id: str) -> None:
+        self._store = store
+        self._device_id = device_id
+        self.cloud_config = store.cloud_config
+
+    async def async_load(self) -> None:
+        await self._store.async_load()
+        self.cloud_config = self._store.cloud_config
+
+    async def async_save(self) -> None:
+        await self._store.async_save()
+
+    def all(self) -> dict[str, dict]:
+        device = self._store.get(self._device_id)
+        return {self._device_id: device} if device else {}
+
+    def get(self, device_id: str) -> dict | None:
+        if device_id != self._device_id:
+            return None
+        return self._store.get(device_id)
+
+    async def add(self, config: dict) -> dict:
+        return await self._store.add(config)
+
+    async def add_many(self, configs: list[dict]) -> list[dict]:
+        matching = [config for config in configs if config.get(CONF_DEVICE_ID) == self._device_id]
+        return await self._store.add_many(matching)
+
+    async def remove(self, device_id: str) -> bool:
+        if device_id != self._device_id:
+            return False
+        return await self._store.remove(device_id)
 
 
 def _async_register_services(hass: HomeAssistant, entry_id: str) -> None:
@@ -135,6 +196,30 @@ def _async_register_services(hass: HomeAssistant, entry_id: str) -> None:
         updated = dict(current)
         updated[CONF_HOST] = host
         updated["ip"] = host
+        stored = await coord.store.add(updated)
+        await coord.async_reload_devices()
+        return {"device": stored}
+
+    async def set_device_domain(call: ServiceCall) -> dict[str, Any]:
+        coord = _coordinator(hass, entry_id)
+        device_id = call.data[CONF_DEVICE_ID]
+        current = coord.store.get(device_id)
+        if not current:
+            raise ValueError(f"Tuya device {device_id} is not imported")
+        updated = dict(current)
+        updated["domain"] = call.data["domain"]
+        stored = await coord.store.add(updated)
+        await coord.async_reload_devices()
+        return {"device": stored}
+
+    async def set_device_type(call: ServiceCall) -> dict[str, Any]:
+        coord = _coordinator(hass, entry_id)
+        device_id = call.data[CONF_DEVICE_ID]
+        current = coord.store.get(device_id)
+        if not current:
+            raise ValueError(f"Tuya device {device_id} is not imported")
+        updated = dict(current)
+        updated[CONF_DEVICE_TYPE] = call.data[CONF_DEVICE_TYPE]
         stored = await coord.store.add(updated)
         await coord.async_reload_devices()
         return {"device": stored}
@@ -184,6 +269,20 @@ def _async_register_services(hass: HomeAssistant, entry_id: str) -> None:
         SERVICE_SET_DEVICE_IP,
         set_device_ip,
         schema=SET_DEVICE_IP_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_DEVICE_DOMAIN,
+        set_device_domain,
+        schema=SET_DEVICE_DOMAIN_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_DEVICE_TYPE,
+        set_device_type,
+        schema=SET_DEVICE_TYPE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
