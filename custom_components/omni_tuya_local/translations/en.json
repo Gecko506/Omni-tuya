@@ -66,9 +66,10 @@
       },
       "set_ip": {
         "title": "Configurar {device_name}",
-        "description": "Ajusta la IP local y como debe verse este dispositivo en Home Assistant.\n\nID: `{device_id}`\nIP actual: `{current_ip}`\nEntidad actual: `{current_domain}`\nTipo actual: `{current_device_type}`\n\nEjemplo: una cafetera normalmente se exporta como `switch` y tipo real `Cafetera`; un robot aspirador puede exportarse como `vacuum` y tipo real `Robot aspirador`.",
+        "description": "Ajusta la IP local, protocolo y como debe verse este dispositivo en Home Assistant.\n\nID: `{device_id}`\nIP actual: `{current_ip}`\nProtocolo actual: `{current_version}`\nEntidad actual: `{current_domain}`\nTipo actual: `{current_device_type}`\n\nEjemplo: una cafetera normalmente se exporta como `switch` y tipo real `Cafetera`; un robot aspirador puede exportarse como `vacuum` y tipo real `Robot aspirador`.",
         "data": {
           "host": "Direccion IP local",
+          "version": "Version protocolo",
           "domain": "Exportar como entidad",
           "device_type": "Tipo real del dispositivo"
         }

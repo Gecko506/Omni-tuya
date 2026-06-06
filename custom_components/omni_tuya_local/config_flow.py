@@ -171,7 +171,7 @@ class OmniTuyaLocalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             protocol = config.get(CONF_VERSION, DEFAULT_VERSION)
             if protocol == "auto":
                 ok, detected = await _async_test_any_protocol(self.hass, config)
-                config[CONF_VERSION] = detected if ok else DEFAULT_VERSION
+                config[CONF_VERSION] = detected if ok else str(defaults.get(CONF_VERSION) or "3.4")
             else:
                 await _async_test_tuya_connection(self.hass, config, protocol)
             await self.async_set_unique_id(config[CONF_DEVICE_ID])
@@ -184,7 +184,7 @@ class OmniTuyaLocalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_DEVICE_ID, default=defaults.get(CONF_DEVICE_ID, "")): str,
                 vol.Required(CONF_HOST, default=defaults.get(CONF_HOST) or defaults.get("ip") or ""): str,
                 vol.Required(CONF_LOCAL_KEY, default=defaults.get(CONF_LOCAL_KEY, "")): str,
-                vol.Required(CONF_VERSION, default=str(defaults.get(CONF_VERSION) or "auto")): vol.In(PROTOCOL_VERSIONS),
+                vol.Required(CONF_VERSION, default=str(defaults.get(CONF_VERSION) or "3.4")): vol.In(PROTOCOL_VERSIONS),
                 vol.Required("domain", default=defaults.get("domain") or "switch"): SelectSelector(
                     SelectSelectorConfig(
                         options=[
@@ -299,6 +299,7 @@ class OmniTuyaLocalOptionsFlow(config_entries.OptionsFlow):
                 updated = dict(dev)
                 updated[CONF_HOST] = ip
                 updated["ip"] = ip
+                updated[CONF_VERSION] = user_input.get(CONF_VERSION) or updated.get(CONF_VERSION) or "3.4"
                 updated["domain"] = user_input.get("domain") or updated.get("domain") or "switch"
                 updated[CONF_DEVICE_TYPE] = user_input.get(CONF_DEVICE_TYPE) or updated.get(CONF_DEVICE_TYPE) or "generic"
                 await store.add(updated)
@@ -313,6 +314,7 @@ class OmniTuyaLocalOptionsFlow(config_entries.OptionsFlow):
                 return self.async_create_entry(title="", data={})
 
         current_ip = dev.get("host") or dev.get("ip") or ""
+        current_version = str(dev.get(CONF_VERSION) or "3.4")
         current_domain = dev.get("domain") or "switch"
         current_device_type = dev.get(CONF_DEVICE_TYPE) or "generic"
 
@@ -321,6 +323,7 @@ class OmniTuyaLocalOptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_HOST, default=current_ip): str,
+                    vol.Required(CONF_VERSION, default=current_version): vol.In(["3.1", "3.3", "3.4", "3.5"]),
                     vol.Required("domain", default=current_domain): SelectSelector(
                         SelectSelectorConfig(
                             options=[
@@ -345,6 +348,7 @@ class OmniTuyaLocalOptionsFlow(config_entries.OptionsFlow):
                 "device_name": dev.get("name", self._selected_device_id or ""),
                 "device_id": self._selected_device_id or "",
                 "current_ip": current_ip or "sin IP configurada",
+                "current_version": current_version,
                 "current_domain": DOMAIN_LABELS.get(current_domain, current_domain),
                 "current_device_type": DEVICE_TYPES.get(current_device_type, DEVICE_TYPES["generic"])["label"],
             },
