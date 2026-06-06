@@ -1,6 +1,6 @@
 DOMAIN = "omni_tuya_local"
-INTEGRATION_VERSION = "0.1.7"
-BUILD_NUMBER = "20260605.7"
+INTEGRATION_VERSION = "0.1.8"
+BUILD_NUMBER = "20260605.8"
 
 CONF_REGION = "region"
 CONF_API_KEY = "api_key"
@@ -30,6 +30,7 @@ SERVICE_ADD_DEVICE = "add_device"
 SERVICE_REMOVE_DEVICE = "remove_device"
 SERVICE_SCAN_NETWORK = "scan_network"
 SERVICE_SYNC_CLOUD = "sync_cloud"
+SERVICE_SET_DEVICE_IP = "set_device_ip"
 SERVICE_RELOAD_DEVICES = "reload_devices"
 SERVICE_DIAGNOSTICS = "diagnostics"
 

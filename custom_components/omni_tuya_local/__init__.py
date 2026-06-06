@@ -28,6 +28,7 @@ from .const import (
     SERVICE_RELOAD_DEVICES,
     SERVICE_REMOVE_DEVICE,
     SERVICE_SCAN_NETWORK,
+    SERVICE_SET_DEVICE_IP,
     SERVICE_SYNC_CLOUD,
     SERVICE_DIAGNOSTICS,
 )
@@ -51,6 +52,13 @@ ADD_DEVICE_SCHEMA = vol.Schema(
 )
 
 REMOVE_DEVICE_SCHEMA = vol.Schema({vol.Required(CONF_DEVICE_ID): cv.string})
+
+SET_DEVICE_IP_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE_ID): cv.string,
+        vol.Required(CONF_HOST): cv.string,
+    }
+)
 
 SYNC_CLOUD_SCHEMA = vol.Schema(
     {
@@ -117,6 +125,20 @@ def _async_register_services(hass: HomeAssistant, entry_id: str) -> None:
         coord = _coordinator(hass, entry_id)
         await coord.async_remove_device(call.data[CONF_DEVICE_ID])
 
+    async def set_device_ip(call: ServiceCall) -> dict[str, Any]:
+        coord = _coordinator(hass, entry_id)
+        device_id = call.data[CONF_DEVICE_ID]
+        host = call.data[CONF_HOST].strip()
+        current = coord.store.get(device_id)
+        if not current:
+            raise ValueError(f"Tuya device {device_id} is not imported")
+        updated = dict(current)
+        updated[CONF_HOST] = host
+        updated["ip"] = host
+        stored = await coord.store.add(updated)
+        await coord.async_reload_devices()
+        return {"device": stored}
+
     async def scan_network(call: ServiceCall) -> dict[str, Any]:
         coord = _coordinator(hass, entry_id)
         found = await async_scan_network(hass, list(coord.store.all().values()))
@@ -157,6 +179,13 @@ def _async_register_services(hass: HomeAssistant, entry_id: str) -> None:
 
     hass.services.async_register(DOMAIN, SERVICE_ADD_DEVICE, add_device, schema=ADD_DEVICE_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_REMOVE_DEVICE, remove_device, schema=REMOVE_DEVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_DEVICE_IP,
+        set_device_ip,
+        schema=SET_DEVICE_IP_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
     hass.services.async_register(
         DOMAIN,
         SERVICE_SCAN_NETWORK,

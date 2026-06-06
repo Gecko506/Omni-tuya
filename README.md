@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/versión-0.1.6-blue?style=flat-square"/>
+  <img src="https://img.shields.io/badge/versión-0.1.8-blue?style=flat-square"/>
   <img src="https://img.shields.io/badge/HA-2026.4%2B-41BDF5?style=flat-square&logo=home-assistant"/>
   <img src="https://img.shields.io/badge/HACS-Custom-orange?style=flat-square"/>
   <img src="https://img.shields.io/badge/protocolo-Tuya%20Local-FF6B35?style=flat-square"/>
@@ -99,6 +99,17 @@ Los dispositivos importados desde la nube no siempre tienen una IP estática asi
 
 > ⚠️ Para que los cambios surtan efecto no necesitas reiniciar HA — el coordinator recarga automáticamente.
 
+Si el botón **Configurar** no aparece por caché de HACS o por una instalación anterior, usa el servicio explícito:
+
+```yaml
+service: omni_tuya_local.set_device_ip
+data:
+  device_id: "bf1234567890abcdef"
+  host: "192.168.1.105"
+```
+
+Este servicio actualiza el almacenamiento local, recarga el dispositivo y permite que sus entidades funcionen por LAN.
+
 ---
 
 ## Descubrimiento automático de IPs
@@ -149,16 +160,34 @@ data:
 
 ---
 
+### `omni_tuya_local.set_device_ip`
+Configura o actualiza la IP local de un dispositivo ya importado desde Tuya Cloud.
+
+```yaml
+service: omni_tuya_local.set_device_ip
+data:
+  device_id: "bf1234567890abcdef"
+  host: "192.168.1.105"
+```
+
+---
+
 ### `omni_tuya_local.sync_cloud`
 Sincroniza (importa) dispositivos desde Tuya Cloud. Útil si agregaste nuevos dispositivos a tu cuenta Tuya.
+
+```yaml
+service: omni_tuya_local.sync_cloud
+data: {}
+```
+
+Si no guardaste credenciales durante la configuración inicial, puedes pasarlas en el servicio:
 
 ```yaml
 service: omni_tuya_local.sync_cloud
 data:
   api_key: "tu_access_id"
   api_secret: "tu_access_secret"
-  region: "us"        # us | eu | cn | in
-  device_id: ""       # opcional — filtra por un solo dispositivo
+  region: "eu"
 ```
 
 ---
@@ -192,8 +221,8 @@ service: omni_tuya_local.diagnostics
 
 ```json
 {
-  "version": "0.1.6",
-  "build": "20260605.3",
+  "version": "0.1.8",
+  "build": "20260605.8",
   "devices": 12
 }
 ```
@@ -313,6 +342,8 @@ Los campos son compatibles: `device_id`, `name`, `local_key`, `ip` → `host`, `
 
 | Versión | Cambios |
 |---|---|
+| **0.1.8** | Servicio `set_device_ip`, versión/tag/release para HACS y documentación de configuración local |
+| **0.1.7** | Entidad `text` editable para IP desde la página del dispositivo |
 | **0.1.6** | OptionsFlow para editar IP por dispositivo, logo PNG real, traducciones |
 | **0.1.5** | Logo OMNI-TUYA, hacs.json con URL de logo |
 | **0.1.4** | OptionsFlow inicial (multi-paso), icon.png |

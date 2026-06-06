@@ -49,20 +49,33 @@ remove_device:
       selector:
         text:
 
+set_device_ip:
+  name: Set device IP
+  description: Set or update the local IP address for an imported Tuya device.
+  fields:
+    device_id:
+      required: true
+      selector:
+        text:
+    host:
+      required: true
+      selector:
+        text:
+
 scan_network:
   name: Scan network
   description: Discover local Tuya devices and update known IP addresses.
 
 sync_cloud:
   name: Sync cloud
-  description: Import device IDs and local keys from Tuya IoT Cloud.
+  description: Import device IDs and local keys from Tuya IoT Cloud. Credentials are optional if already saved in the integration.
   fields:
     api_key:
-      required: true
+      required: false
       selector:
         text:
     api_secret:
-      required: true
+      required: false
       selector:
         text:
           type: password
