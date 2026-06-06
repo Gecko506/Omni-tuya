@@ -2,6 +2,9 @@
 
 Home Assistant custom integration for local Tuya control, based on the Tuya Local work built for Omni.
 
+Version: `0.1.1`
+Build: `20260605.1`
+
 This is a HACS integration, not an add-on. It creates native Home Assistant entities and talks directly to devices through `tinytuya`.
 
 ## Included
@@ -46,6 +49,7 @@ The integration exposes these services:
 - `omni_tuya_local.scan_network`
 - `omni_tuya_local.sync_cloud`
 - `omni_tuya_local.reload_devices`
+- `omni_tuya_local.diagnostics`
 
 ## Cloud Sync
 

@@ -83,3 +83,7 @@ sync_cloud:
 reload_devices:
   name: Reload devices
   description: Reload stored devices and refresh entities.
+
+diagnostics:
+  name: Diagnostics
+  description: Return integration version, build number and stored device count.

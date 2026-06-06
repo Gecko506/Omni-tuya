@@ -18,15 +18,18 @@ from .const import (
     CONF_LOCAL_KEY,
     CONF_REGION,
     CONF_VERSION,
+    BUILD_NUMBER,
     DEFAULT_REGION,
     DEFAULT_VERSION,
     DOMAIN,
+    INTEGRATION_VERSION,
     PLATFORMS,
     SERVICE_ADD_DEVICE,
     SERVICE_RELOAD_DEVICES,
     SERVICE_REMOVE_DEVICE,
     SERVICE_SCAN_NETWORK,
     SERVICE_SYNC_CLOUD,
+    SERVICE_DIAGNOSTICS,
 )
 from .coordinator import OmniTuyaLocalCoordinator
 from .discovery import async_scan_network
@@ -124,9 +127,22 @@ def _async_register_services(hass: HomeAssistant, entry_id: str) -> None:
         coord = _coordinator(hass, entry_id)
         await coord.async_reload_devices()
 
+    async def diagnostics(call: ServiceCall) -> dict[str, Any]:
+        coord = _coordinator(hass, entry_id)
+        return {
+            "version": INTEGRATION_VERSION,
+            "build": BUILD_NUMBER,
+            "devices": len(coord.store.all()),
+        }
+
     hass.services.async_register(DOMAIN, SERVICE_ADD_DEVICE, add_device, schema=ADD_DEVICE_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_REMOVE_DEVICE, remove_device, schema=REMOVE_DEVICE_SCHEMA)
-    hass.services.async_register(DOMAIN, SERVICE_SCAN_NETWORK, scan_network)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SCAN_NETWORK,
+        scan_network,
+        supports_response=SupportsResponse.OPTIONAL,
+    )
     hass.services.async_register(
         DOMAIN,
         SERVICE_SYNC_CLOUD,
@@ -135,3 +151,9 @@ def _async_register_services(hass: HomeAssistant, entry_id: str) -> None:
         supports_response=SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(DOMAIN, SERVICE_RELOAD_DEVICES, reload_devices)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_DIAGNOSTICS,
+        diagnostics,
+        supports_response=SupportsResponse.ONLY,
+    )
